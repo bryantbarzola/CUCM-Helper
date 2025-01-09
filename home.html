@@ -96,6 +96,7 @@
         const responseElement = document.getElementById('response');
         const issueInput = document.getElementById('issue');
 
+        // Listen for form submissions
         form.addEventListener('submit', async (event) => {
             event.preventDefault(); 
             responseElement.innerHTML = ''; // Clear previous response
@@ -121,31 +122,46 @@
             }
         });
 
+        // Allow pressing Enter to submit
+        issueInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault(); // Prevent new line in textarea
+                form.dispatchEvent(new Event('submit')); // Trigger form submission
+            }
+        });
+
         function renderResponse(responseText) {
             if (!responseText) {
                 responseElement.innerHTML = '<p>No response received.</p>';
                 return;
             }
 
-            // Detect numbered lists (1., 2., etc.)
             const lines = responseText.split('\n');
-            const formattedResponse = lines.map(line => {
-                if (/^\d+\.\s/.test(line)) { // Check for numbered steps
-                    return `<li>${line.trim()}</li>`;
+            let formattedResponse = '';
+            let insideList = false;
+
+            lines.forEach(line => {
+                line = line.trim();
+                if (/^\d+\.\s/.test(line)) { // Detect numbered lists
+                    if (!insideList) {
+                        formattedResponse += '<ol>';
+                        insideList = true;
+                    }
+                    formattedResponse += `<li>${line.replace(/^\d+\.\s*/, '')}</li>`;
+                } else {
+                    if (insideList) {
+                        formattedResponse += '</ol>';
+                        insideList = false;
+                    }
+                    formattedResponse += `<p>${line}</p>`;
                 }
-                return `<p>${line.trim()}</p>`; // Default to plain text
-            }).join('');
+            });
 
-            // Add a warning if the response seems truncated
-            const isTruncated = !responseText.endsWith('.');
-            const warningMessage = isTruncated
-                ? '<p style="color: orange;">Warning: The response may be incomplete. Try rephrasing your input.</p>'
-                : '';
+            if (insideList) {
+                formattedResponse += '</ol>';
+            }
 
-            responseElement.innerHTML = `
-                ${warningMessage}
-                <ol>${formattedResponse}</ol>
-            `;
+            responseElement.innerHTML = formattedResponse;
         }
     </script>
 </body>
