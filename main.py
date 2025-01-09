@@ -32,7 +32,7 @@ def troubleshoot():
                 {"role": "system", "content": "You are an expert CUCM troubleshooter."},
                 {"role": "user", "content": f"Troubleshoot this CUCM issue: {user_input}"}
             ],
-            max_tokens=150
+            max_tokens=500
         )
         solution = response['choices'][0]['message']['content'].strip()
         return jsonify({"solution": solution})
